@@ -7,3 +7,4 @@ python-decouple
 gunicorn
 factory-boy==3.3.0
 Faker==20.1.0
+whitenoise==6.6.0
