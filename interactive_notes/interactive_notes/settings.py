@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 from decouple import config
 
@@ -88,16 +88,26 @@ WSGI_APPLICATION = 'interactive_notes.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', 'postgres'),
-        'USER': config('POSTGRES_USER', 'postgres'),
-        'PASSWORD': config('POSTGRES_PASSWORD', ''),
-        'HOST': config('POSTGRES_HOST', 'localhost'),
-        'PORT': config('POSTGRES_PORT', '5432'),
+USE_POSTGRES = os.environ.get('USE_PROD_DB', '0') == '1'
+
+if USE_POSTGRES:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('POSTGRES_DB', 'postgres'),
+            'USER': config('POSTGRES_USER', 'postgres'),
+            'PASSWORD': config('POSTGRES_PASSWORD', ''),
+            'HOST': config('POSTGRES_HOST', 'localhost'),
+            'PORT': config('POSTGRES_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 REST_FRAMEWORK = {

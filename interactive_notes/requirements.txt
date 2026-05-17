@@ -5,3 +5,5 @@ psycopg2-binary
 django-cors-headers
 python-decouple
 gunicorn
+factory-boy==3.3.0
+Faker==20.1.0
