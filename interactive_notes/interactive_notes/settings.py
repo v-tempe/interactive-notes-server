@@ -34,6 +34,12 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', 'localhost').split(' ')
 
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(' ')
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'http://localhost:5173',
+]
+
+
 # Application definition
 
 INSTALLED_APPS = [
