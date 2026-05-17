@@ -74,3 +74,38 @@ class NotebookSerializer(serializers.ModelSerializer):
                 ContentBlock.objects.create(section=section, **block_data)
 
         return notebook
+
+    def update(self, instance, validated_data):
+        # 1. Обновляем простые поля конспекта (например, title)
+        instance.title = validated_data.get('title', instance.title)
+        instance.save()
+
+        # 2. Обрабатываем секции
+        sections_data = validated_data.pop('sections', [])
+
+        # Для простоты реализации:
+        # Мы удалим все старые секции (и их блоки) и создадим новые на основе присланных данных.
+        # Это гарантирует синхронизацию состояния фронтенда и бэкенда.
+
+        # Удаляем старые секции (каскадное удаление удалит и блоки)
+        instance.sections.all().delete()
+
+        for section_data in sections_data:
+            blocks_data = section_data.pop('blocks', [])
+            # Создаем новую секцию
+            section = Section.objects.create(
+                notebook=instance,
+                title=section_data.get('title'),
+                order=section_data.get('order', 0)
+            )
+            # Создаем блоки для этой секции
+            for block_data in blocks_data:
+                ContentBlock.objects.create(
+                    section=section,
+                    block_type=block_data.get('block_type'),
+                    content=block_data.get('content', ''),
+                    image_url=block_data.get('image_url'),
+                    order=block_data.get('order', 0)
+                )
+
+        return instance
