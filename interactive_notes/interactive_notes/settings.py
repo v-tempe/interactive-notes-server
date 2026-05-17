@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,13 +21,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6di(9il*w_ar^z0a(&$yl9te6=v$^mak%p)s1jkhh21*@zb3x!'
+SECRET_KEY = config(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-6di(9il*w_ar^z0a(&$yl9te6=v$^mak%p)s1jkhh21*@zb3x!',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DJANGO_DEBUG', '0') == '1'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', 'localhost').split(' ')
 
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(' ')
 
 # Application definition
 
@@ -85,8 +90,12 @@ WSGI_APPLICATION = 'interactive_notes.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('POSTGRES_DB', 'postgres'),
+        'USER': config('POSTGRES_USER', 'postgres'),
+        'PASSWORD': config('POSTGRES_PASSWORD', ''),
+        'HOST': config('POSTGRES_HOST', 'localhost'),
+        'PORT': config('POSTGRES_PORT', '5432'),
     }
 }
 
