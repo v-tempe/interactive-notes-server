@@ -92,12 +92,12 @@ WSGI_APPLICATION = 'interactive_notes.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-USE_POSTGRES = os.environ.get('USE_PROD_DB', '0') == '1'
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-if USE_POSTGRES:
+if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
+            default=DATABASE_URL,
             conn_max_age=600,
             ssl_require=True,
         )
