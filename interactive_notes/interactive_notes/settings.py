@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
     # local
     'users.apps.UsersConfig',
+    'notes.apps.NotesConfig',
 ]
 
 MIDDLEWARE = [
