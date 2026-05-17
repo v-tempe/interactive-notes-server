@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+
+import dj_database_url
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -94,14 +96,11 @@ USE_POSTGRES = os.environ.get('USE_PROD_DB', '0') == '1'
 
 if USE_POSTGRES:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('POSTGRES_DB', 'postgres'),
-            'USER': config('POSTGRES_USER', 'postgres'),
-            'PASSWORD': config('POSTGRES_PASSWORD', ''),
-            'HOST': config('POSTGRES_HOST', 'localhost'),
-            'PORT': config('POSTGRES_PORT', '5432'),
-        }
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
 else:
     DATABASES = {
