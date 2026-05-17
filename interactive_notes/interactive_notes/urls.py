@@ -2,7 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 from notes.views import NotebookViewSet, CollaboratorViewSet
+from users.views import RegisterView
+
 
 router = DefaultRouter()
 router.register(r'notebooks', NotebookViewSet, basename='notebook')
@@ -12,6 +15,7 @@ urlpatterns = [
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
+    path('api/auth/register/', RegisterView.as_view(), name='register'),
     path('api/notebooks/<int:notebook_pk>/collaborators/',
          CollaboratorViewSet.as_view({'get': 'list', 'post': 'create'}),
          name='collaborator-list'),
