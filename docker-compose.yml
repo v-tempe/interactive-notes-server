@@ -9,6 +9,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
+    networks:
+      - notes_network
 
   backend:
     build: ./interactive_notes
@@ -28,6 +30,14 @@ services:
       - DJANGO_SSL_REQUIRE=0
     depends_on:
       - db
+    networks:
+      - notes_network
+
+
+networks:
+  notes_network:
+    driver: bridge
+
 
 volumes:
   postgres_data:
