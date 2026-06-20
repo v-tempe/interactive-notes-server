@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'interactive_notes.wsgi.application'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
-SSL_REQUIRE = os.environ.get('DJANGO_SSL_REQUIRE', '0') == '1'
+SSL_REQUIRE = True if not DEBUG else os.environ.get('DJANGO_SSL_REQUIRE', '0') in ('true', '1', 'yes')
 
 if DATABASE_URL:
     DATABASES = {
