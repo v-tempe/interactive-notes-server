@@ -98,6 +98,8 @@ if DATABASE_URL:
         )
     }
 else:
+    if not DEBUG:
+        raise ImproperlyConfigured("В продакшене необходимо задать DATABASE_URL")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
