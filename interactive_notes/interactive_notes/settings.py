@@ -16,7 +16,7 @@ except UndefinedValueError:
     )
 
 # --- SECURITY: Debug & Hosts ---
-DEBUG = config('DJANGO_DEBUG', '0') == '1'
+DEBUG = config('DJANGO_DEBUG', default='False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', 'localhost').split(' ')
 
