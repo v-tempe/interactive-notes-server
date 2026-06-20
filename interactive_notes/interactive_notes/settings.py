@@ -25,7 +25,7 @@ if not ALLOWED_HOSTS:
     else:
         raise ImproperlyConfigured("В продакшене необходимо задать ALLOWED_HOSTS")
 
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(' ')
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split()
 CSRF_TRUSTED_ORIGINS = [
                            'https://*.onrender.com',
                            'http://localhost:5173',
