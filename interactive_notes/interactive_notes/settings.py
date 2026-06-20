@@ -18,7 +18,12 @@ except UndefinedValueError:
 # --- SECURITY: Debug & Hosts ---
 DEBUG = config('DJANGO_DEBUG', default='False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', 'localhost').split(' ')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split()
+if not ALLOWED_HOSTS:
+    if DEBUG:
+        ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1']
+    else:
+        raise ImproperlyConfigured("В продакшене необходимо задать ALLOWED_HOSTS")
 
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(' ')
 CSRF_TRUSTED_ORIGINS = [
