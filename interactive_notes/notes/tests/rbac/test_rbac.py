@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from .factories import NotebookFactory, UserFactory, CollaboratorFactory
+from ..factories import NotebookFactory, UserFactory, CollaboratorFactory
 
 
 class RoleValidationTestCase(TestCase):
