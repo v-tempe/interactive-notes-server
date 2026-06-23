@@ -24,6 +24,15 @@ class NotebookFactory(DjangoModelFactory):
     owner = factory.SubFactory(UserFactory)
 
 
+class CollaboratorFactory(DjangoModelFactory):
+    class Meta:
+        model = Collaborator
+
+    notebook = factory.SubFactory(NotebookFactory)
+    user = factory.SubFactory(UserFactory)
+    role = 'viewer'
+
+
 class SectionFactory(DjangoModelFactory):
     class Meta:
         model = Section
