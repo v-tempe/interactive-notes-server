@@ -129,6 +129,8 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
 }
 
+APPEND_SLASH = False
+
 # --- Schema Generation ---
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Interactive Notes API',
