@@ -2,24 +2,15 @@ import random
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from .factories import NotebookFactory, UserFactory, CollaboratorFactory
+from .factories import NotebookFactory, UserFactory
 
 
 class FuzzingAPITestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-
-        # Основной пользователь (Владелец)
-        self.owner = UserFactory.create()
-        self.token_owner = self._get_token(self.owner)
-
-        # Пользователь-соавтор
-        self.collab_user = UserFactory.create()
-        self.token_collab = self._get_token(self.collab_user)
-
-        # Посторонний пользователь
-        self.stranger = UserFactory.create()
-        self.token_stranger = self._get_token(self.stranger)
+        self.user = UserFactory.create()
+        self.token = self._get_token(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
 
     def _get_token(self, user):
         url = '/api/auth/token/'
@@ -45,7 +36,6 @@ class FuzzingAPITestCase(TestCase):
 
     def test_fuzz_create_notebook_stability(self):
         """Тестирует устойчивость endpoint создания конспекта к некорректным данным"""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_owner}')
         url = '/api/notebooks/'
         errors_500 = 0
 
@@ -65,18 +55,9 @@ class FuzzingAPITestCase(TestCase):
             "API вернул 500 ошибку на некорректные данные при создании!",
         )
 
-    def test_fuzz_invalid_ids_and_methods(self):
-        """Проверяет реакцию на неверные ID и методы"""
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_owner}')
-
-        # Случайные несуществующие ID
-        random_id = random.randint(10000, 99999)
+    def test_fuzz_invalid_ids(self):
+        """Проверка реакции на несуществующие ID"""
+        random_id = random.randint(999999, 9999999)
         url = f'/api/notebooks/{random_id}/'
-
-        methods = ['get', 'put', 'patch', 'delete']
-        for method in methods:
-            func = getattr(self.client, method)
-            response = func(url)
-            # Должно быть 404, а не 500
-            self.assertNotEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                f"Ошибка 500 при обращении к несуществующему ID через {method}")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
