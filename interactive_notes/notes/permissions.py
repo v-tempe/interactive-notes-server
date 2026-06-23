@@ -17,13 +17,40 @@ class IsOwnerOrCollaborator(permissions.BasePermission):
             return True
 
         # check if user is a collaborator
-        collaborator = Collaborator.objects.filter(notebook=obj, user=request.user).first()
-        if not collaborator:
+        try:
+            collaborator = Collaborator.objects.get(notebook=obj, user=request.user)
+        except Collaborator.DoesNotExist:
             return False
 
-        # if method is safe, then give permissions
+        # if method is safe, then give permissions to any collaborator
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # for changing need an editor role
+        # for changing notebook content need an editor role
         return collaborator.role == 'editor'
+
+
+class IsOwner(permissions.BasePermission):
+    """
+    Разрешение для управления соавторами (Collaborator).
+    Только владелец ноутбука может добавлять, изменять или удалять соавторов.
+    Читать список соавторов могут владелец и сами соавторы.
+    """
+
+    def has_permission(self, request, view):
+        # check if user is authenticated
+        if not request.user or not request.user.is_authenticated:
+            return False
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        notebook = obj.notebook
+
+        if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return notebook.owner == request.user
+
+        if request.method in permissions.SAFE_METHODS:
+            return notebook.owner == request.user or \
+                    obj.user == request.user
+
+        return False
