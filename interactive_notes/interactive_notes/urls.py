@@ -20,7 +20,7 @@ urlpatterns = [
     path('api/notebooks/<int:notebook_pk>/collaborators/',
          CollaboratorViewSet.as_view({'get': 'list', 'post': 'create'}),
          name='collaborator-list'),
-    path('api/notebooks/<int:notebook_pk>/collaborators/<int:pk>/', CollaboratorViewSet.as_view(
+    path('api/notebooks/<int:notebook_pk>/collaborators/<int:collaborator_pk>/', CollaboratorViewSet.as_view(
         {'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}),
          name='collaborator-detail'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
