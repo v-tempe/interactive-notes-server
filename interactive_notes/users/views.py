@@ -1,9 +1,10 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from notes.serializers import UserSerializer  # Убедитесь, что импорт верный
 
-from notes.serializers import UserSerializer
+User = get_user_model()
 
 
 class RegisterView(generics.CreateAPIView):
@@ -11,16 +12,12 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = UserSerializer
 
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        email = request.data.get("email", "")
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)  # Здесь сработает вся валидация!
+        self.perform_create(serializer)
 
-        if not username or not password:
-            return Response({"error": "Username and password are required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if User.objects.filter(username=username).exists():
-            return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = User.objects.create_user(username=username, password=password, email=email)
-        return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"message": "User created successfully"},
+            status=status.HTTP_201_CREATED
+        )
