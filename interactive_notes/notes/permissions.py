@@ -26,6 +26,9 @@ class IsOwnerOrCollaborator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
+        if request.method == 'DELETE':
+            return False
+
         # for changing notebook content need an editor role
         return collaborator.role == 'editor'
 
