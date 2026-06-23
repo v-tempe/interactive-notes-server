@@ -55,6 +55,12 @@ class CollaboratorViewSet(viewsets.ModelViewSet):
         if notebook.owner != self.request.user:
             raise PermissionDenied("Только владелец может добавлять соавторов.")
 
+        # author cannot add himself as collaborator
+        if serializer.validated_data['user'] == self.request.user:
+            raise ValidationError(
+                "Владелец конспекта уже имеет полный доступ и не может быть добавлен как соавтор."
+            )
+
         # collaborator cannot add himself again
         if Collaborator.objects.filter(notebook=notebook, user=serializer.validated_data['user']).exists():
             raise ValidationError("Этот пользователь уже является соавтором.")
