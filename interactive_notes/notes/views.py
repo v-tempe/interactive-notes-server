@@ -26,6 +26,8 @@ class NotebookViewSet(viewsets.ModelViewSet):
 class CollaboratorViewSet(viewsets.ModelViewSet):
     serializer_class = CollaboratorSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwner]
+    lookup_field = 'id'
+    lookup_url_kwarg = 'collaborator_pk'
 
     def get_queryset(self):
         notebook_id = self.kwargs['notebook_pk']

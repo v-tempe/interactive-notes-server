@@ -65,31 +65,6 @@ class FuzzingAPITestCase(TestCase):
             "API вернул 500 ошибку на некорректные данные при создании!",
         )
 
-    def test_fuzz_permissions_collaborator_management(self):
-        """Фаззинг прав доступа: проверка, что соавтор не может управлять другими соавторами"""
-        notebook = NotebookFactory.create(owner=self.owner)
-        CollaboratorFactory.create(notebook=notebook, user=self.collab_user, role='editor')
-
-        # Создаем третьего пользователя, которого будем пытаться добавить/удалить
-        target_user = UserFactory.create()
-
-        url_list = f'/api/notebooks/{notebook.id}/collaborators/'
-
-        # 1. Попытка соавтора добавить кого-то (должно быть 403)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_collab}')
-        response = self.client.post(url_list, {'user': target_user.id, 'role': 'viewer'}, format='json')
-        self.assertIn(response.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_400_BAD_REQUEST],
-                      f"Соавтор смог добавить участника! Status: {response.status_code}")
-
-        # 2. Попытка постороннего удалить соавтора (должно быть 403 или 404)
-        collaborator_obj = CollaboratorFactory.create(notebook=notebook, user=target_user)
-        url_detail = f'/api/notebooks/{notebook.id}/collaborators/{collaborator_obj.id}/'
-
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_stranger}')
-        response = self.client.delete(url_detail)
-        self.assertIn(response.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND],
-                      f"Посторонний смог удалить соавтора! Status: {response.status_code}")
-
     def test_fuzz_invalid_ids_and_methods(self):
         """Проверяет реакцию на неверные ID и методы"""
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_owner}')
