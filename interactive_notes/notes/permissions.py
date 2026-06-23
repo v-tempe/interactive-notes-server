@@ -4,6 +4,13 @@ from notes.models import Collaborator
 
 
 class IsOwnerOrCollaborator(permissions.BasePermission):
+    """
+    Разрешение для объектов Notebook.
+    Владелец имеет полные права.
+    Соавторы имеют права на чтение (GET, HEAD, OPTIONS).
+    Редакторы (editor) имеют права на изменение самого конспекта (PUT, PATCH).
+    """
+
     def has_object_permission(self, request, view, obj):
         # owner always has permission
         if obj.owner == request.user:
