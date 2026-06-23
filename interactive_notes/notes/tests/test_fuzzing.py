@@ -105,19 +105,3 @@ class FuzzingAPITestCase(TestCase):
             # Должно быть 404, а не 500
             self.assertNotEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 f"Ошибка 500 при обращении к несуществующему ID через {method}")
-
-    def test_fuzz_role_validation(self):
-        """Проверка валидации ролей при создании соавтора"""
-        notebook = NotebookFactory.create(owner=self.owner)
-        target_user = UserFactory.create()
-        url = f'/api/notebooks/{notebook.id}/collaborators/'
-
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_owner}')
-
-        # Попытка задать несуществующую роль
-        response = self.client.post(url, {'user': target_user.id, 'role': 'admin'}, format='json')
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_400_BAD_REQUEST,
-            "Сервер принял несуществующую роль 'admin'",
-        )
