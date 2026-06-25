@@ -85,3 +85,19 @@ class CollaboratorViewSet(viewsets.ModelViewSet):
             raise ValidationError("Этот пользователь уже является соавтором.")
 
         serializer.save(notebook=notebook)
+
+    def perform_update(self, serializer):
+        """Только владелец может изменять роль соавтора"""
+        notebook_id = self.kwargs['notebook_pk']
+        try:
+            notebook = Notebook.objects.get(id=notebook_id)
+        except Notebook.DoesNotExist:
+            raise PermissionDenied("Конспект не найден.")
+
+        if notebook.owner != self.request.user:
+            raise PermissionDenied("Только владелец может изменять роли соавторов.")
+
+        # Обновляем только роль, игнорируя всё остальное
+        if 'role' in serializer.validated_data:
+            serializer.instance.role = serializer.validated_data['role']
+            serializer.instance.save()

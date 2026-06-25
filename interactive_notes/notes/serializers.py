@@ -71,7 +71,14 @@ class CollaboratorSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request = self.context.get('request')
 
-        # Проверяем, что передан либо user, либо username
+        # Для PATCH запросов: если передана только роль, пропускаем валидацию пользователя
+        if request and request.method == 'PATCH':
+            if set(data.keys()) == {'role'}:
+                return data
+            if 'user' in data or 'username' in data:
+                pass
+
+        # Для POST и PUT проверяем пользователя
         user = data.get('user')
         username = data.get('username')
 
@@ -91,8 +98,8 @@ class CollaboratorSerializer(serializers.ModelSerializer):
                     {"username": "Пользователь с таким именем не найден"}
                 )
 
-        # Проверка на добавление самого себя
-        if request and data.get('user'):
+        # Проверка на добавление самого себя (только для POST)
+        if request and request.method == 'POST' and data.get('user'):
             if request.user == data['user']:
                 raise serializers.ValidationError(
                     "Владелец конспекта уже имеет полный доступ и не может быть добавлен как соавтор."
@@ -103,6 +110,15 @@ class CollaboratorSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('username', None)
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """Обновление роли (и только роли)"""
+        # Обновляем роль, если она передана
+        if 'role' in validated_data:
+            instance.role = validated_data['role']
+
+        instance.save()
+        return instance
 
 
 class NotebookSerializer(serializers.ModelSerializer):
