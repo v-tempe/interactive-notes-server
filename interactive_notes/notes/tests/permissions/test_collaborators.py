@@ -38,6 +38,8 @@ class PermissionTestCase(TestCase):
         url = f'/api/notebooks/{self.notebook.id}/collaborators/'
         response = self.client.post(url, {'user': self.stranger.id, 'role': 'viewer'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(url, {'username': self.stranger.username, 'role': 'viewer'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_stranger_cannot_see_collaborators(self):
         """Посторонний не видит список соавторов"""

@@ -57,10 +57,52 @@ class SectionSerializer(serializers.ModelSerializer):
 
 class CollaboratorSerializer(serializers.ModelSerializer):
     user_details = UserSerializer(source='user', read_only=True)
+    username = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True
+    )
 
     class Meta:
         model = Collaborator
-        fields = ['id', 'user', 'user_details', 'role']
+        fields = ['id', 'user', 'user_details', 'role', 'username']
+
+    def validate(self, data):
+        request = self.context.get('request')
+
+        # Проверяем, что передан либо user, либо username
+        user = data.get('user')
+        username = data.get('username')
+
+        if not user and not username:
+            raise serializers.ValidationError(
+                "Необходимо указать пользователя (user или username)"
+            )
+
+        # Если передан username, ищем пользователя
+        if username and not user:
+            try:
+                user_obj = User.objects.get(username=username)
+                data['user'] = user_obj
+                data.pop('username')  # Удаляем username из данных
+            except User.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"username": "Пользователь с таким именем не найден"}
+                )
+
+        # Проверка на добавление самого себя
+        if request and data.get('user'):
+            if request.user == data['user']:
+                raise serializers.ValidationError(
+                    "Владелец конспекта уже имеет полный доступ и не может быть добавлен как соавтор."
+                )
+
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop('username', None)
+        return super().create(validated_data)
 
 
 class NotebookSerializer(serializers.ModelSerializer):
