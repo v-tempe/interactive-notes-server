@@ -23,7 +23,7 @@
 1. Клонируйте репозиторий себе на компьютер:
    - HTTPS
       ```bash
-      https://github.com/v-tempe/interactive-notes-server.git
+      git clone https://github.com/v-tempe/interactive-notes-server.git
       ```
    - SSH
        ```bash
