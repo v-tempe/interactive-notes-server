@@ -7,7 +7,9 @@ django.setup()
 from django.contrib.auth.models import User
 
 username = os.environ.get('ADMIN_USERNAME', 'admin')
-password = os.environ.get('ADMIN_PASSWORD', 'adminpassword123')
+password = os.environ.get('ADMIN_PASSWORD')
+if not password:
+    raise RuntimeError('You must provide ADMIN_PASSWORD in .env file.')
 email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
 
 if not User.objects.filter(username=username).exists():
