@@ -22,22 +22,7 @@ class NotebookViewSet(viewsets.ModelViewSet):
         return (owned | collaborated).distinct()
 
     def perform_create(self, serializer):
-        notebook_id = self.kwargs['notebook_pk']
-        try:
-            notebook = Notebook.objects.get(id=notebook_id)
-        except Notebook.DoesNotExist:
-            raise PermissionDenied("Конспект не найден.")
-
-        # Проверка прав
-        if notebook.owner != self.request.user:
-            raise PermissionDenied("Только владелец может добавлять соавторов.")
-
-        # Проверка на существование соавтора
-        user = serializer.validated_data.get('user')
-        if user and Collaborator.objects.filter(notebook=notebook, user=user).exists():
-            raise ValidationError("Этот пользователь уже является соавтором.")
-
-        serializer.save(notebook=notebook)
+        serializer.save(owner=self.request.user)
 
 
 class CollaboratorViewSet(viewsets.ModelViewSet):
