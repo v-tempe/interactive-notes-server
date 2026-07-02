@@ -1,63 +1,66 @@
-import random
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from ..factories import UserFactory
+from ..factories import UserFactory, NotebookFactory
 
 
-class FuzzingAPITestCase(TestCase):
+class CollaboratorFuzzingTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = UserFactory.create()
-        self.token = self._get_token(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
+        # Создаем владельца и постороннего пользователя
+        self.owner = UserFactory.create()
+        self.stranger = UserFactory.create()
+
+        self.notebook = NotebookFactory.create(owner=self.owner)
+
+        self.token_owner = self._get_token(self.owner)
+        self.token_stranger = self._get_token(self.stranger)
 
     def _get_token(self, user):
         url = '/api/auth/token/'
         response = self.client.post(url, {'username': user.username, 'password': 'defaultpassword'})
         return response.data['access']
 
-    def get_random_payload(self):
-        """Генерирует случайные полезные нагрузки для фаззинга"""
-        payloads = [
+    def get_invalid_collaborator_payloads(self):
+        """Генерирует некорректные данные для добавления соавтора"""
+        return [
             {},  # Пустое тело
-            {"title": 12345},  # Неверный тип данных
-            {"title": None},  # Null значение
-            {"title": "'; DROP TABLE notes_notebook; --"},  # SQL Injection attempt
-            {"title": "<script>alert('xss')</script>"},  # XSS attempt
-            {"sections": "not a list"},  # Неверный тип для вложенного объекта
-            {"sections": [{"title": 123}]},  # Неверный тип внутри списка
-            {"unknown_field": "value"},  # Лишние поля
-            {"title": "A" * 10000},  # Очень длинная строка
-            {"title": ""},  # Пустая строка
-            {"title": True},  # Булево значение
+            {"user": "not_an_id"},  # Строка вместо ID
+            {"user": -1},  # Отрицательный ID
+            {"user": 9999999},  # Несуществующий ID пользователя
+            {"role": "superadmin"},  # Несуществующая роль
+            {"role": 123},  # Число вместо строки роли
+            {"user": None, "role": None},  # Null значения
+            {"extra_field": "value"},  # Лишние поля
         ]
-        return random.choice(payloads)
 
-    def test_fuzz_create_notebook_stability(self):
-        """Тестирует устойчивость endpoint создания конспекта к некорректным данным"""
-        url = '/api/notebooks/'
+    def test_fuzz_add_collaborator_stability(self):
+        """Проверяет устойчивость эндпоинта добавления соавторов к некорректным данным"""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_owner}')
+        url = f'/api/notebooks/{self.notebook.id}/collaborators/'
         errors_500 = 0
 
-        for _ in range(20):
-            payload = self.get_random_payload()
+        for payload in self.get_invalid_collaborator_payloads():
             try:
                 response = self.client.post(url, payload, format='json')
-
+                # Нас интересуют только критические ошибки сервера
                 if response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR:
                     errors_500 += 1
-            except Exception:
+                    print(f"CRITICAL: 500 error for payload: {payload}")
+            except Exception as e:
                 errors_500 += 1
+                print(f"EXCEPTION: {e} for payload: {payload}")
 
-        self.assertEqual(
-            errors_500,
-            0,
-            "API вернул 500 ошибку на некорректные данные при создании!",
-        )
+        self.assertEqual(errors_500, 0, "API вернул 500 ошибку при фаззинге соавторов!")
 
-    def test_fuzz_invalid_ids(self):
-        """Проверка реакции на несуществующие ID"""
-        random_id = random.randint(999999, 9999999)
-        url = f'/api/notebooks/{random_id}/'
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    def test_fuzz_unauthorized_collaborator_access(self):
+        """Фаззинг прав доступа: попытка постороннего добавить соавтора"""
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token_stranger}')
+        url = f'/api/notebooks/{self.notebook.id}/collaborators/'
+
+        # Даже с валидными данными посторонний должен получать отказ
+        target_user = UserFactory.create()
+        response = self.client.post(url, {'user': target_user.id, 'role': 'viewer'}, format='json')
+
+        # Ожидаем 403 или 404, но не 500
+        self.assertIn(response.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND])
