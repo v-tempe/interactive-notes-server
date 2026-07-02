@@ -26,6 +26,7 @@ if not ALLOWED_HOSTS:
     else:
         raise ImproperlyConfigured("В продакшене необходимо задать ALLOWED_HOSTS")
 
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:5173').split()
 CSRF_TRUSTED_ORIGINS = [
                            'https://*.onrender.com',
@@ -127,6 +128,10 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
+    'AUTH_COOKIE': 'access_token',
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_SECURE': not DEBUG, # В продакшене (HTTPS) должно быть True
+    'AUTH_COOKIE_SAMESITE': 'Lax',
 }
 
 APPEND_SLASH = False
